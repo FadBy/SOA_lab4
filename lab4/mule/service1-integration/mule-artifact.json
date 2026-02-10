@@ -1,0 +1,24 @@
+{
+  "name": "service1-integration",
+  "minMuleVersion": "4.4.0",
+  "requiredProduct": "MULE",
+  "configs": [
+    "mule/service1-integration.xml"
+  ],
+  "dependencies": [
+    {
+      "groupId": "org.mule.connectors",
+      "artifactId": "mule-http-connector",
+      "version": "1.11.1",
+      "type": "mule-plugin"
+    }
+  ],
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {}
+  },
+  "bundleDescriptorLoader": {
+    "id": "mule",
+    "attributes": {}
+  }
+}

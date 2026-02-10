@@ -1,0 +1,710 @@
+openapi: 3.0.4
+info:
+  title: SOA lab API
+  version: 0.0.1
+
+components:
+  schemas:
+    Color:
+      type: string
+      enum:
+        - RED
+        - BLUE
+        - ORANGE
+        - WHITE
+        - BROWN
+
+    Country:
+      type: string
+      enum:
+        - SPAIN
+        - VATICAN
+        - THAILAND
+
+    Coordinates:
+      type: object
+      properties:
+        x:
+          type: number
+          format: float
+          minimum: -195
+        y:
+          type: integer
+      required:
+        - x
+        - y
+      example:
+        x: 123.45
+        y: 67
+
+    Location:
+      type: object
+      properties:
+        x:
+          type: number
+          format: double
+        y:
+          type: number
+          format: float
+        name:
+          type: string
+          maxLength: 554
+      required:
+        - x
+        - y
+        - name
+      example:
+        x: 12.3456789
+        y: 98.76
+        name: "Central Park"
+
+    Person:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+        name:
+          type: string
+          minLength: 1
+        coordinates:
+          $ref: '#/components/schemas/Coordinates'
+        creationDate:
+          type: string
+          format: date
+          readOnly: true
+          example: "2023-10-15"
+        height:
+          type: number
+          format: float
+          minimum: 0
+        birthday:
+          type: string
+          format: date
+          nullable: true
+          example: "1990-05-20"
+        eyeColor:
+          $ref: '#/components/schemas/Color'
+        nationality:
+          $ref: '#/components/schemas/Country'
+          nullable: true
+        location:
+          $ref: '#/components/schemas/Location'
+      required:
+        - id
+        - name
+        - coordinates
+        - creationDate
+        - height
+        - eyeColor
+        - location
+      example:
+        id: 1
+        name: "John Doe"
+        coordinates:
+          x: 123.45
+          y: 67
+        creationDate: "2023-10-15"
+        height: 180.5
+        birthday: "1990-05-20"
+        eyeColor: BLUE
+        nationality: SPAIN
+        location:
+          x: 12.3456789
+          y: 98.76
+          name: "Central Park"
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: integer
+
+  parameters:
+    PersonId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+    Nationality:
+      name: nationality
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Country'
+
+    EyeColor:
+      name: eye-color
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Color'
+
+    NameSubstring:
+      name: name
+      in: query
+      required: true
+      schema:
+        type: string
+
+    Sort:
+      name: sort
+      in: query
+      schema:
+        type: string
+      example: "name,asc"
+
+    Filter:
+      name: filter
+      in: query
+      schema:
+        type: string
+      example: "height>170"
+
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+
+    Size:
+      name: size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 10
+
+paths:
+  /persons:
+    get:
+      description: Get all people
+      parameters:
+        - $ref: '#/components/parameters/Sort'
+        - $ref: '#/components/parameters/Filter'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: "List of persons retrieved successfully"
+          content:
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Person'
+              example: |
+                <persons>
+                  <person>
+                    <id>1</id>
+                    <name>John Doe</name>
+                    <coordinates>
+                      <x>123.45</x>
+                      <y>67</y>
+                    </coordinates>
+                    <creationDate>2023-10-15</creationDate>
+                    <height>180.5</height>
+                    <birthday>1990-05-20</birthday>
+                    <eyeColor>BLUE</eyeColor>
+                    <nationality>SPAIN</nationality>
+                    <location>
+                      <x>12.3456789</x>
+                      <y>98.76</y>
+                      <name>Central Park</name>
+                    </location>
+                  </person>
+                  <person>
+                    <id>2</id>
+                    <name>Jane Smith</name>
+                    <coordinates>
+                      <x>45.67</x>
+                      <y>89</y>
+                    </coordinates>
+                    <creationDate>2023-10-16</creationDate>
+                    <height>165.0</height>
+                    <eyeColor>BROWN</eyeColor>
+                    <nationality>THAILAND</nationality>
+                    <location>
+                      <x>34.5678</x>
+                      <y>12.34</y>
+                      <name>Times Square</name>
+                    </location>
+                  </person>
+                </persons>
+        '400':
+          description: "Bad request"
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                badRequestExample:
+                  summary: "Invalid parameters example"
+                  value: |
+                    <error>
+                      <message>Invalid sort parameter</message>
+                      <code>400</code>
+                    </error>
+        '500':
+          description: "Internal server error"
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                InternalErrorExample:
+                  value: |
+                    <error>
+                      <message>Internal server error</message>
+                      <code>500</code>
+                    </error>
+
+    post:
+      description: Create new person
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/Person'
+            examples:
+              createPersonExample:
+                summary: "Example of person creation request"
+                value: |
+                  <person>
+                    <id>3</id>
+                    <name>Alice Johnson</name>
+                    <coordinates>
+                      <x>78.9</x>
+                      <y>123</y>
+                    </coordinates>
+                    <height>170.0</height>
+                    <birthday>1985-12-15</birthday>
+                    <eyeColor>GREEN</eyeColor>
+                    <nationality>VATICAN</nationality>
+                    <location>
+                      <x>45.6789</x>
+                      <y>23.45</y>
+                      <name>Eiffel Tower</name>
+                    </location>
+                  </person>
+      responses:
+        '201':
+          description: "Person created successfully"
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Person'
+              examples:
+                createdPersonExample:
+                  summary: "Example of created person"
+                  value: |
+                    <person>
+                      <id>3</id>
+                      <name>Alice Johnson</name>
+                      <coordinates>
+                        <x>78.9</x>
+                        <y>123</y>
+                      </coordinates>
+                      <creationDate>2023-10-17</creationDate>
+                      <height>170.0</height>
+                      <birthday>1985-12-15</birthday>
+                      <eyeColor>GREEN</eyeColor>
+                      <nationality>VATICAN</nationality>
+                      <location>
+                        <x>45.6789</x>
+                        <y>23.45</y>
+                        <name>Eiffel Tower</name>
+                      </location>
+                    </person>
+        '400':
+          description: "Request is not valid"
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                validationErrorExample:
+                  summary: "Validation error example"
+                  value: |
+                    <error>
+                      <message>Invalid height value: must be positive</message>
+                      <code>400</code>
+                    </error>
+        '500':
+          description: "Internal server error"
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                InternalErrorExample:
+                  value: |
+                    <error>
+                      <message>Internal server error</message>
+                      <code>500</code>
+                    </error>
+
+  /persons/{id}:
+    get:
+      description: "Get person by id"
+      parameters:
+        - $ref: '#/components/parameters/PersonId'
+      responses:
+        '200':
+          description: "Person found successfully"
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Person'
+              examples:
+                personFoundExample:
+                  summary: "Example of found person"
+                  value: |
+                    <person>
+                      <id>1</id>
+                      <name>John Doe</name>
+                      <coordinates>
+                        <x>123.45</x>
+                        <y>67</y>
+                      </coordinates>
+                      <creationDate>2023-10-15</creationDate>
+                      <height>180.5</height>
+                      <birthday>1990-05-20</birthday>
+                      <eyeColor>BLUE</eyeColor>
+                      <nationality>SPAIN</nationality>
+                      <location>
+                        <x>12.3456789</x>
+                        <y>98.76</y>
+                        <name>Central Park</name>
+                      </location>
+                    </person>
+        '404':
+          description: "Person not found"
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFoundExample:
+                  summary: "Person not found example"
+                  value: |
+                    <error>
+                      <message>Person with id 999 not found</message>
+                      <code>404</code>
+                    </error>
+        '500':
+          description: "Internal server error"
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      description: "Update person with id"
+      parameters:
+        - $ref: '#/components/parameters/PersonId'
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/Person'
+            examples:
+              updatePersonExample:
+                summary: "Example of person update request"
+                value: |
+                  <person>
+                    <id>1</id>
+                    <name>John Updated</name>
+                    <coordinates>
+                      <x>111.22</x>
+                      <y>33</y>
+                    </coordinates>
+                    <height>185.0</height>
+                    <birthday>1990-05-20</birthday>
+                    <eyeColor>BLUE</eyeColor>
+                    <nationality>SPAIN</nationality>
+                    <location>
+                      <x>15.6789</x>
+                      <y>105.67</y>
+                      <name>Updated Location</name>
+                    </location>
+                  </person>
+      responses:
+        '200':
+          description: "Update successful"
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Person'
+              examples:
+                updatedPersonExample:
+                  summary: "Example of updated person"
+                  value: |
+                    <person>
+                      <id>1</id>
+                      <name>John Updated</name>
+                      <coordinates>
+                        <x>111.22</x>
+                        <y>33</y>
+                      </coordinates>
+                      <creationDate>2023-10-15</creationDate>
+                      <height>185.0</height>
+                      <birthday>1990-05-20</birthday>
+                      <eyeColor>BLUE</eyeColor>
+                      <nationality>SPAIN</nationality>
+                      <location>
+                        <x>15.6789</x>
+                        <y>105.67</y>
+                        <name>Updated Location</name>
+                      </location>
+                    </person>
+        '400':
+          description: "Invalid request"
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: "Person not found"
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: "Internal server error"
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      description: "Delete person"
+      parameters:
+        - $ref: '#/components/parameters/PersonId'
+      responses:
+        '200':
+          description: "Deleted successfully"
+        '404':
+          description: "Person not found"
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: "Internal server error"
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /persons/max-coordinates:
+    get:
+      description: "Get person with max coordinates"
+      responses:
+        '200':
+          description: "Person with max coordinates found"
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Person'
+              examples:
+                maxCoordinatesExample:
+                  summary: "Example of person with max coordinates"
+                  value: |
+                    <person>
+                      <id>5</id>
+                      <name>Max Coordinate Person</name>
+                      <coordinates>
+                        <x>195.0</x>
+                        <y>100</y>
+                      </coordinates>
+                      <creationDate>2023-10-18</creationDate>
+                      <height>175.0</height>
+                      <eyeColor>RED</eyeColor>
+                      <nationality>THAILAND</nationality>
+                      <location>
+                        <x>67.89</x>
+                        <y>45.67</y>
+                        <name>Highest Point</name>
+                      </location>
+                    </person>
+        '404':
+          description: "Person not found"
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: "Internal server error"
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /persons/search:
+    get:
+      description: "Find person with NameSubstring in name"
+      parameters:
+        - $ref: '#/components/parameters/NameSubstring'
+      responses:
+        '200':
+          description: "Persons found successfully"
+          content:
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Person'
+              examples:
+                searchResultsExample:
+                  summary: "Example of search results"
+                  value: |
+                    <persons>
+                      <person>
+                        <id>1</id>
+                        <name>John Doe</name>
+                        <coordinates>
+                          <x>123.45</x>
+                          <y>67</y>
+                        </coordinates>
+                        <creationDate>2023-10-15</creationDate>
+                        <height>180.5</height>
+                        <birthday>1990-05-20</birthday>
+                        <eyeColor>BLUE</eyeColor>
+                        <nationality>SPAIN</nationality>
+                        <location>
+                          <x>12.3456789</x>
+                          <y>98.76</y>
+                          <name>Central Park</name>
+                        </location>
+                      </person>
+                      <person>
+                        <id>4</id>
+                        <name>Johnny Smith</name>
+                        <coordinates>
+                          <x>56.78</x>
+                          <y>90</y>
+                        </coordinates>
+                        <creationDate>2023-10-17</creationDate>
+                        <height>172.0</height>
+                        <eyeColor>GREEN</eyeColor>
+                        <nationality>VATICAN</nationality>
+                        <location>
+                          <x>23.4567</x>
+                          <y>34.56</y>
+                          <name>City Center</name>
+                        </location>
+                      </person>
+                    </persons>
+        '500':
+          description: "Internal server error"
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /persons/locations:
+    get:
+      description: "Get all unique locations"
+      responses:
+        '200':
+          description: "Unique locations retrieved successfully"
+          content:
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Location'
+              examples:
+                locationsExample:
+                  summary: "Example of unique locations"
+                  value: |
+                    <locations>
+                      <location>
+                        <x>12.3456789</x>
+                        <y>98.76</y>
+                        <name>Central Park</name>
+                      </location>
+                      <location>
+                        <x>34.5678</x>
+                        <y>12.34</y>
+                        <name>Times Square</name>
+                      </location>
+                      <location>
+                        <x>45.6789</x>
+                        <y>23.45</y>
+                        <name>Eiffel Tower</name>
+                      </location>
+                    </locations>
+        '500':
+          description: "Internal server error"
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /demography/nationality/{nationality}/hair-color:
+    get:
+      description: "Get all people with this nationality and this hair-color"
+      parameters:
+        - $ref: '#/components/parameters/Nationality'
+      responses:
+        '200':
+          description: "Count retrieved successfully"
+          content:
+            application/xml:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+              examples:
+                countExample:
+                  summary: "Example of count result"
+                  value: |
+                    <count>3</count>
+        '500':
+          description: "Internal server error"
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /demography/nationality/{nationality}/eye-color/{eye-color}:
+    get:
+      description: "Get all people with this nationality and this eye-color"
+      parameters:
+        - $ref: '#/components/parameters/Nationality'
+        - $ref: '#/components/parameters/EyeColor'
+      responses:
+        '200':
+          description: "Count retrieved successfully"
+          content:
+            application/xml:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+              examples:
+                eyeColorCountExample:
+                  summary: "Example of eye color count result"
+                  value: |
+                    <count>2</count>
+        '500':
+          description: "Internal server error"
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Error'

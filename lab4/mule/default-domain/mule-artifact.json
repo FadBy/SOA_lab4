@@ -1,0 +1,16 @@
+{
+  "name": "default",
+  "minMuleVersion": "4.4.0",
+  "requiredProduct": "MULE",
+  "configs": [
+    "mule-domain-config.xml"
+  ],
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {}
+  },
+  "bundleDescriptorLoader": {
+    "id": "mule",
+    "attributes": {}
+  }
+}

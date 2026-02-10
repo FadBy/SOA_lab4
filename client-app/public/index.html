@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOA Lab 2 - Person Management</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Управление людьми</h1>
+        
+        <div class="tabs">
+            <button class="tab-button active" onclick="showTab('list')">Список людей</button>
+            <button class="tab-button" onclick="showTab('create')">Создать человека</button>
+            <button class="tab-button" onclick="showTab('search')">Поиск</button>
+            <button class="tab-button" onclick="showTab('demography')">Демография</button>
+        </div>
+        
+        <div id="list-tab" class="tab-content active">
+            <h2>Список людей</h2>
+            <div class="filters">
+                <label>
+                    Сортировка (field,direction):
+                    <input type="text" id="sortInput" placeholder="name,asc">
+                </label>
+                <label>
+                    Фильтр (field>value):
+                    <input type="text" id="filterInput" placeholder="height>170">
+                </label>
+                <button onclick="loadPersons()">Применить</button>
+            </div>
+            <div id="persons-list"></div>
+            <div class="pagination">
+                <button id="prevPage" onclick="previousPage()">← Назад</button>
+                <span id="pageInfo">Страница 1</span>
+                <button id="nextPage" onclick="nextPage()">Вперёд →</button>
+            </div>
+        </div>
+        
+        <div id="create-tab" class="tab-content">
+            <h2>Создать/Редактировать человека</h2>
+            <form id="person-form">
+                <input type="hidden" id="person-id">
+                <label>
+                    Имя:
+                    <input type="text" id="person-name" required>
+                </label>
+                <label>
+                    Координата X:
+                    <input type="number" id="coord-x" step="0.01" min="-195" required>
+                </label>
+                <label>
+                    Координата Y:
+                    <input type="number" id="coord-y" required>
+                </label>
+                <label>
+                    Рост:
+                    <input type="number" id="person-height" step="0.1" min="0" required>
+                </label>
+                <label>
+                    Дата рождения (YYYY-MM-DD):
+                    <input type="date" id="person-birthday">
+                </label>
+                <label>
+                    Цвет глаз:
+                    <select id="person-eye-color" required>
+                        <option value="RED">RED</option>
+                        <option value="BLUE">BLUE</option>
+                        <option value="ORANGE">ORANGE</option>
+                        <option value="WHITE">WHITE</option>
+                        <option value="BROWN">BROWN</option>
+                    </select>
+                </label>
+                <label>
+                    Национальность:
+                    <select id="person-nationality">
+                        <option value="">Нет</option>
+                        <option value="SPAIN">SPAIN</option>
+                        <option value="VATICAN">VATICAN</option>
+                        <option value="THAILAND">THAILAND</option>
+                    </select>
+                </label>
+                <label>
+                    Локация X:
+                    <input type="number" id="loc-x" step="0.0000001" required>
+                </label>
+                <label>
+                    Локация Y:
+                    <input type="number" id="loc-y" step="0.01" required>
+                </label>
+                <label>
+                    Название локации:
+                    <input type="text" id="loc-name" maxlength="554" required>
+                </label>
+                <button type="submit" id="btn-create">Создать</button>
+                <button type="button" id="btn-update" onclick="updatePerson()" style="display: none;">Обновить</button>
+                <button type="button" onclick="cancelEdit()">Отмена</button>
+            </form>
+        </div>
+        
+        <div id="search-tab" class="tab-content">
+            <h2>Поиск</h2>
+            <div class="search-controls">
+                <label>
+                    Поиск по имени (подстрока):
+                    <input type="text" id="search-name" placeholder="John">
+                </label>
+                <button onclick="searchPersons()">Найти</button>
+            </div>
+            <div id="search-results"></div>
+            
+            <h3>Дополнительные операции</h3>
+            <div class="additional-controls">
+                <button onclick="getMaxCoordinates()">Человек с максимальными координатами</button>
+                <button onclick="getAllLocations()">Все уникальные локации</button>
+            </div>
+            <div id="additional-results"></div>
+        </div>
+        
+        <div id="demography-tab" class="tab-content">
+            <h2>Демографическая статистика</h2>
+            <div class="demography-controls">
+                <div class="demo-row">
+                    <label>
+                        Национальность:
+                        <select id="demo-nationality">
+                            <option value="SPAIN">SPAIN</option>
+                            <option value="VATICAN">VATICAN</option>
+                            <option value="THAILAND">THAILAND</option>
+                        </select>
+                    </label>
+                    <button onclick="getCountByNationality()">Количество по национальности</button>
+                </div>
+                
+                <div class="demo-row">
+                    <label>
+                        Цвет глаз:
+                        <select id="demo-eye-color">
+                            <option value="RED">RED</option>
+                            <option value="BLUE">BLUE</option>
+                            <option value="ORANGE">ORANGE</option>
+                            <option value="WHITE">WHITE</option>
+                            <option value="BROWN">BROWN</option>
+                        </select>
+                    </label>
+                    <button onclick="getCountByNationalityAndEyeColor()">Количество по национальности и цвету глаз</button>
+                </div>
+            </div>
+            <div id="demography-results"></div>
+        </div>
+        
+        <div id="message" class="message"></div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
+
