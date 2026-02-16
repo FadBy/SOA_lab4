@@ -49,7 +49,9 @@ function showTab(tabName) {
     });
     
     document.getElementById(`${tabName}-tab`).classList.add('active');
-    event.target.classList.add('active');
+    if (typeof event !== 'undefined' && event?.target) {
+        event.target.classList.add('active');
+    }
 }
 
 async function makeRequest(url, method = 'GET', body = null) {
@@ -91,7 +93,7 @@ async function makeRequest(url, method = 'GET', body = null) {
 }
 
 function xmlToPerson(xmlDoc) {
-    const person = xmlDoc.querySelector('Person');
+    const person = xmlDoc.querySelector('Person, person');
     if (!person) return null;
     
     return {
@@ -164,7 +166,8 @@ async function loadPersons() {
         const parser = new DOMParser();
         const xml = parser.parseFromString(text, 'application/xml');
         
-        const persons = Array.from(xml.querySelectorAll('PersonsWrapper > persons > persons')).map(person => {
+        const personNodes = xml.querySelectorAll('PersonsWrapper > persons > persons, persons > person');
+        const persons = Array.from(personNodes).map(person => {
             return {
                 id: person.querySelector('id')?.textContent,
                 name: person.querySelector('name')?.textContent,
@@ -278,12 +281,11 @@ async function editPerson(id) {
         
         setFormMode('edit');
         showTab('create');
-        // Activate the create tab button
         document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.tab-button')[1].classList.add('active');
     } catch (error) {
         console.error('Edit person error:', error);
-        // Silently fail - form will just not be filled
+        showMessage(`Ошибка редактирования: ${error.message}`, 'error');
     }
 }
 
@@ -379,7 +381,8 @@ async function searchPersons() {
         const parser = new DOMParser();
         const xml = parser.parseFromString(text, 'application/xml');
         
-        const persons = Array.from(xml.querySelectorAll('PersonsWrapper > persons > persons')).map(person => {
+        const personNodes = xml.querySelectorAll('PersonsWrapper > persons > persons, persons > person');
+        const persons = Array.from(personNodes).map(person => {
             return {
                 id: person.querySelector('id')?.textContent,
                 name: person.querySelector('name')?.textContent,
@@ -452,7 +455,8 @@ async function getAllLocations() {
         const parser = new DOMParser();
         const xml = parser.parseFromString(text, 'application/xml');
         
-        const locations = Array.from(xml.querySelectorAll('LocationsWrapper > locations > locations')).map(loc => {
+        const locationNodes = xml.querySelectorAll('LocationsWrapper > locations > locations, locations > location');
+        const locations = Array.from(locationNodes).map(loc => {
             return {
                 x: loc.querySelector('x')?.textContent,
                 y: loc.querySelector('y')?.textContent,

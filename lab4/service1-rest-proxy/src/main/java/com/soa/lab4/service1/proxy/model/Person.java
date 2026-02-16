@@ -1,9 +1,5 @@
 package com.soa.lab4.service1.proxy.model;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
@@ -25,8 +21,6 @@ public class Person {
 
     @XmlElement
     @XmlJavaTypeAdapter(LocalDateAdapter.class)
-    @JsonDeserialize(using = LocalDateDeserializer.class)
-    @JsonSerialize(using = LocalDateSerializer.class)
     private LocalDate creationDate;
 
     @XmlElement
@@ -34,8 +28,6 @@ public class Person {
 
     @XmlElement
     @XmlJavaTypeAdapter(LocalDateAdapter.class)
-    @JsonDeserialize(using = LocalDateDeserializer.class)
-    @JsonSerialize(using = LocalDateSerializer.class)
     private LocalDate birthday;
 
     @XmlElement

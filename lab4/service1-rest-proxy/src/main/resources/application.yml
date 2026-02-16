@@ -3,7 +3,6 @@ server:
   servlet:
     context-path: /service1-spring
 
-soap:
-  wsdl-url: http://localhost:8180/service1-soap/Service1SoapService?wsdl
-  namespace: http://soap.service1.lab4.soa.com/
-  service-name: Service1SoapService
+mule:
+  base-url: http://localhost:8082
+  soap-invoke-path: /service1-soap-rest/invoke

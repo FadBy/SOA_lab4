@@ -1,46 +1,49 @@
 package com.soa.lab4.service1.proxy.controller;
 
-import com.soa.lab4.service1.proxy.client.Service1SoapClient;
+import com.soa.lab4.service1.proxy.client.Service1BusClient;
 import com.soa.lab4.service1.proxy.model.Color;
-import com.soa.lab4.service1.proxy.model.CountResponse;
 import com.soa.lab4.service1.proxy.model.Country;
 import com.soa.lab4.service1.proxy.model.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(produces = MediaType.APPLICATION_XML_VALUE)
+@RequestMapping(value = "/demography", produces = MediaType.APPLICATION_XML_VALUE)
 public class DemographyProxyController {
-    private final Service1SoapClient soapClient;
+    private final Service1BusClient busClient;
 
-    public DemographyProxyController(Service1SoapClient soapClient) {
-        this.soapClient = soapClient;
+    public DemographyProxyController(Service1BusClient busClient) {
+        this.busClient = busClient;
     }
 
-    @GetMapping("/demography/nationality/{nationality}/hair-color")
-    public ResponseEntity<?> getCountByNationality(@PathVariable("nationality") Country nationality) {
+    @GetMapping("/nationality/{nationality}/hair-color")
+    public ResponseEntity<?> getCountByNationality(@PathVariable("nationality") String nationality) {
         try {
-            CountResponse response = soapClient.getPort().getCountByNationality(nationality);
-            return ResponseEntity.ok(response);
+            Country country = Country.valueOf(nationality);
+            return ResponseEntity.ok(busClient.getCountByNationality(country));
         } catch (Exception e) {
-            ErrorResponse error = new ErrorResponse("Internal server error", 500);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+            ErrorResponse error = new ErrorResponse("Invalid nationality", 400);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
 
-    @GetMapping("/demography/nationality/{nationality}/eye-color/{eye-color}")
+    @GetMapping("/nationality/{nationality}/eye-color/{eyeColor}")
     public ResponseEntity<?> getCountByNationalityAndEyeColor(
-            @PathVariable("nationality") Country nationality,
-            @PathVariable("eye-color") Color eyeColor
+            @PathVariable("nationality") String nationality,
+            @PathVariable("eyeColor") String eyeColor
     ) {
         try {
-            CountResponse response = soapClient.getPort().getCountByNationalityAndEyeColor(nationality, eyeColor);
-            return ResponseEntity.ok(response);
+            Country country = Country.valueOf(nationality);
+            Color color = Color.valueOf(eyeColor);
+            return ResponseEntity.ok(busClient.getCountByNationalityAndEyeColor(country, color));
         } catch (Exception e) {
-            ErrorResponse error = new ErrorResponse("Internal server error", 500);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+            ErrorResponse error = new ErrorResponse("Invalid parameters", 400);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
 }

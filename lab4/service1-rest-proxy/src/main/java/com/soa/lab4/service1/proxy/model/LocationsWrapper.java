@@ -5,7 +5,6 @@ import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import java.util.List;
-import java.util.Set;
 
 @XmlRootElement(name = "locations")
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -15,9 +14,10 @@ public class LocationsWrapper {
 
     public LocationsWrapper() {}
 
-    public LocationsWrapper(Set<Location> locations) {
-        this.locations = new java.util.ArrayList<>(locations);
+    public LocationsWrapper(List<Location> locations) {
+        this.locations = locations;
     }
+
 
     public List<Location> getLocations() {
         return locations;

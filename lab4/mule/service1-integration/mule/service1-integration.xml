@@ -6,20 +6,105 @@
         http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
         http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
 
-    <http:listener-config name="httpListener" basePath="/service1-spring">
+    <http:listener-config name="httpListener">
         <http:listener-connection host="0.0.0.0" port="8082"/>
     </http:listener-config>
 
-    <http:request-config name="httpRequest">
+    <http:request-config name="springRequest">
         <http:request-connection host="localhost" port="8081"/>
     </http:request-config>
 
-    <flow name="service1-rest-proxy-flow">
-        <http:listener config-ref="httpListener" path="/*"/>
-        <http:request config-ref="httpRequest"
+    <http:request-config name="soapRequest">
+        <http:request-connection host="localhost" port="8080"/>
+    </http:request-config>
+
+    <flow name="service1-rest-flow">
+        <http:listener config-ref="httpListener" path="/service1-spring/*"/>
+        <http:request config-ref="springRequest"
                       method="#[attributes.method]"
                       path="#[attributes.requestPath]">
             <http:query-params><![CDATA[#[ if ((attributes.queryString default '') != '') read(attributes.queryString, 'application/x-www-form-urlencoded') else {} ]]]></http:query-params>
         </http:request>
+    </flow>
+
+    <flow name="service1-soap-flow">
+        <http:listener config-ref="httpListener" path="/service1-soap-rest/invoke/{operation}"/>
+        <set-variable variableName="operation" value="#[attributes.uriParams.operation]"/>
+        <set-payload value="#[%dw 2.0
+            output text/plain
+            var body = (payload.^raw as String) default write(payload, 'application/xml')
+            ---
+            '&lt;soapenv:Envelope xmlns:soapenv=&quot;http://schemas.xmlsoap.org/soap/envelope/&quot; xmlns:ser=&quot;http://soap.service1.lab4.soa.com/&quot;&gt;' ++
+            '&lt;soapenv:Header/&gt;&lt;soapenv:Body&gt;&lt;ser:' ++ vars.operation ++ '&gt;' ++
+            body ++
+            '&lt;/ser:' ++ vars.operation ++ '&gt;&lt;/soapenv:Body&gt;&lt;/soapenv:Envelope&gt;'
+        ]"/>
+        <http:request config-ref="soapRequest"
+                      method="POST"
+                      path="/service1-soap/Service1SoapService">
+            <http:headers><![CDATA[#[{'Content-Type': 'text/xml; charset=utf-8'}]]]></http:headers>
+        </http:request>
+        <choice>
+            <when expression="#[vars.operation == 'getPersons' or vars.operation == 'searchPersonsByName']">
+                <set-payload value="#[%dw 2.0
+                    output text/plain
+                    var raw = write(payload, 'application/xml')
+                    var parts = raw splitBy '&lt;return&gt;'
+                    var section = if (sizeOf(parts) > 1) parts[1] else ''
+                    var innerParts = section splitBy '&lt;/return&gt;'
+                    var inner = if (sizeOf(innerParts) > 0) innerParts[0] else ''
+                    ---
+                    '&lt;persons&gt;' ++ inner ++ '&lt;/persons&gt;'
+                ]"/>
+            </when>
+            <when expression="#[vars.operation == 'getAllLocations']">
+                <set-payload value="#[%dw 2.0
+                    output text/plain
+                    var raw = write(payload, 'application/xml')
+                    var parts = raw splitBy '&lt;return&gt;'
+                    var section = if (sizeOf(parts) > 1) parts[1] else ''
+                    var innerParts = section splitBy '&lt;/return&gt;'
+                    var inner = if (sizeOf(innerParts) > 0) innerParts[0] else ''
+                    ---
+                    '&lt;locations&gt;' ++ inner ++ '&lt;/locations&gt;'
+                ]"/>
+            </when>
+            <when expression="#[vars.operation == 'getCountByNationality' or vars.operation == 'getCountByNationalityAndEyeColor']">
+                <set-payload value="#[%dw 2.0
+                    output text/plain
+                    var raw = write(payload, 'application/xml')
+                    var p1 = raw splitBy '&lt;count&gt;'
+                    var p2 = if (sizeOf(p1) > 1) p1[1] else '0'
+                    var p3 = p2 splitBy '&lt;/count&gt;'
+                    var countVal = if (sizeOf(p3) > 0) p3[0] else '0'
+                    ---
+                    '&lt;count&gt;&lt;count&gt;' ++ countVal ++ '&lt;/count&gt;&lt;/count&gt;'
+                ]"/>
+            </when>
+            <when expression="#[vars.operation == 'deletePerson']">
+                <set-payload value="#[%dw 2.0
+                    output text/plain
+                    var raw = write(payload, 'application/xml')
+                    var parts = raw splitBy '&lt;return&gt;'
+                    var section = if (sizeOf(parts) > 1) parts[1] else 'false'
+                    var innerParts = section splitBy '&lt;/return&gt;'
+                    var inner = if (sizeOf(innerParts) > 0) innerParts[0] else 'false'
+                    ---
+                    '&lt;deleted&gt;' ++ inner ++ '&lt;/deleted&gt;'
+                ]"/>
+            </when>
+            <otherwise>
+                <set-payload value="#[%dw 2.0
+                    output text/plain
+                    var raw = write(payload, 'application/xml')
+                    var parts = raw splitBy '&lt;return&gt;'
+                    var section = if (sizeOf(parts) > 1) parts[1] else ''
+                    var innerParts = section splitBy '&lt;/return&gt;'
+                    var inner = if (sizeOf(innerParts) > 0) innerParts[0] else ''
+                    ---
+                    '&lt;person&gt;' ++ inner ++ '&lt;/person&gt;'
+                ]"/>
+            </otherwise>
+        </choice>
     </flow>
 </mule>
